@@ -22,7 +22,7 @@ adduser --disabled-password --gecos "" $USERNAME
 mkdir -p /home/$USERNAME/.ssh
 cp ~/.ssh/authorized_keys /home/$USERNAME/.ssh/
 chown -R $USERNAME:$USERNAME /home/$USERNAME/.ssh
-usermod -aG sudo,docker $USERNAME
+usermod -aG sudo $USERNAME
 
 # --- SSH порт ---
 SSH_PORT=$(shuf -i 2000-65000 -n 1)
@@ -34,13 +34,24 @@ echo "2) Node"
 echo "3) Только настройка сервера"
 read -p "Выбор: " MODE
 
+INSTALL_DOCKER=false
+if [ "$MODE" == "1" ] || [ "$MODE" == "2" ]; then
+  INSTALL_DOCKER=true
+elif [ "$MODE" != "3" ]; then
+  echo "Ошибка"
+  exit 1
+fi
+
 # --- Обновление ---
 apt update && apt upgrade -y
 apt install -y curl wget git ufw fail2ban
 
 # --- Docker ---
-curl -fsSL https://get.docker.com | sh
-apt install -y docker-compose
+if [ "$INSTALL_DOCKER" = true ]; then
+  curl -fsSL https://get.docker.com | sh
+  apt install -y docker-compose
+  usermod -aG docker $USERNAME
+fi
 
 # --- SSH hardening ---
 sed -i "s/#Port 22/Port $SSH_PORT/" /etc/ssh/sshd_config
