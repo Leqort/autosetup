@@ -18,7 +18,9 @@ fi
 
 # --- Пользователь ---
 read -p "Имя нового пользователя: " USERNAME
-adduser --disabled-password --gecos "" $USERNAME
+USER_PASSWORD="$(head -c 24 /dev/urandom | base64 | tr -d '\n')"
+adduser --disabled-password --gecos "" "$USERNAME"
+echo "$USERNAME:$USER_PASSWORD" | chpasswd
 mkdir -p /home/$USERNAME/.ssh
 cp ~/.ssh/authorized_keys /home/$USERNAME/.ssh/
 chown -R $USERNAME:$USERNAME /home/$USERNAME/.ssh
@@ -130,4 +132,5 @@ ufw --force enable
 echo ""
 echo "=== ГОТОВО ==="
 echo "SSH: ssh -p $SSH_PORT $USERNAME@IP"
+echo "Пароль пользователя для sudo: $USER_PASSWORD"
 echo "Root вход отключён"
